@@ -7,7 +7,10 @@ import os
 from scipy import stats
 from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
-
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import RobustScaler
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import QuantileTransformer
  
 def new_zillow_data(SQL_query, url):
     '''
@@ -61,9 +64,10 @@ def preparing_data_zillow(df):
     converting float columns to integers
     '''
     df = df.dropna()
-    df.calculatedfinishedsquarefeet = df.calculatedfinishedsquarefeet.astype(int)
-    df.fips = df.fips.astype(int)
-    df.yearbuilt = df.yearbuilt.astype(int)
+    df.calculatedfinishedsquarefeet = df.calculatedfinishedsquarefeet.astype(int).copy()
+    df.fips = df.fips.astype(int).copy()
+    df.yearbuilt = df.yearbuilt.astype(int).copy()
+
     return df
 
 
@@ -86,12 +90,54 @@ def split_data(df, target):
     train, test = train_test_split(df,
                                    test_size=.2, 
                                    random_state=123, 
-                                   stratify=df[target]
+                                   
                                    )
     train, validate = train_test_split(train, 
                                        test_size=.25, 
                                        random_state=123, 
-                                       stratify=train[target]
+                                       
                                        )
     
     return train, validate, test
+
+
+def scaler_quantile_normal(X_train, X_validate, X_test):
+    '''
+    takes in data and uses a QuantileTransformer on it
+    with the hyperperameter output_distribution == 'normal'
+    '''
+    scaler = QuantileTransformer(output_distribution='normal')
+    return scaler.fit_transform(X_train), scaler.fit_transform(X_validate), scaler.fit_transform(X_test)
+
+
+def scaler_quantile_default(X_train, X_validate, X_test):
+    '''
+    takes in data and uses a QuantileTransformer on it
+    '''
+    scaler = QuantileTransformer()
+    return scaler.fit_transform(X_train), scaler.fit_transform(X_validate), scaler.fit_transform(X_test)
+
+
+def scaler_min_max(X_train, X_validate, X_test):
+    '''
+    takes train, test, and validate data and uses the min max scaler on it
+    '''
+    scaler = MinMaxScaler()
+    return scaler.fit_transform(X_train), scaler.fit_transform(X_validate), scaler.fit_transform(X_test)
+
+def scaler_robust(X_train, X_validate, X_test):
+    '''
+    takes train, test, and validate data and uses the RobustScaler on it
+    '''
+    scaler = RobustScaler()
+    return scaler.fit_transform(X_train), scaler.fit_transform(X_validate), scaler.fit_transform(X_test)
+
+
+def standard_scaler(X_train, X_validate, X_test):
+    '''
+    takes train, test, and validate data and uses the standard_scaler on it
+    '''
+    scaler = StandardScaler()
+    return scaler.fit_transform(X_train), scaler.fit_transform(X_validate), scaler.fit_transform(X_test)
+
+    
