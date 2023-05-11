@@ -11,7 +11,9 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import RobustScaler
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import QuantileTransformer
- 
+from sklearn.linear_model import LinearRegression
+from sklearn.feature_selection import SelectKBest, RFE, f_regression, SequentialFeatureSelector
+
 def new_zillow_data(SQL_query, url):
     '''
     this function will:
@@ -140,4 +142,17 @@ def standard_scaler(X_train, X_validate, X_test):
     scaler = StandardScaler()
     return scaler.fit_transform(X_train), scaler.fit_transform(X_validate), scaler.fit_transform(X_test)
 
-    
+def rfe(X_train, y_train, the_k):
+    model = LinearRegression()
+    rfe = RFE(model, n_features_to_select=the_k)
+    rfe.fit(X_train, y_train)
+    the_df = pd.DataFrame(
+    {'rfe_ranking':rfe.ranking_},
+    index=X_train.columns)
+    return the_df[the_df['rfe_ranking'] == 1]
+
+def select_kbest(X_train, y_train, the_k):
+    kbest = SelectKBest(f_regression, k=the_k)
+    kbest.fit(X_train, y_train)
+    return X_train.columns[kbest.get_support()]
+
